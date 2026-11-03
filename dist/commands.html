@@ -1,0 +1,9 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Commands</title>
+<script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
+<script src="lib.js"></script><script src="tools.js"></script>
+<script>
+  // Every ribbon button without a pane is wired to its tool by id.
+  Office.onReady(() => TOOLS.filter(t => t.run && !t.pane).forEach(t =>
+    Office.actions.associate(t.id, async ev => { try { await P.exec(t); } finally { ev.completed(); } })));
+</script></head><body></body></html>
