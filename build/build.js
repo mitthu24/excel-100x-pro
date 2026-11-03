@@ -101,8 +101,8 @@ fs.rmSync(zip, { force: true });
 const stage = path.join(root, '.stage', 'Excel-100x-Pro');
 fs.rmSync(path.join(root, '.stage'), { recursive: true, force: true });
 fs.mkdirSync(stage, { recursive: true });
-['README.md', 'START-LOCAL.cmd', 'dist', 'docs', 'src', 'build', 'server'].forEach(n => {
-  if (fs.existsSync(path.join(root, n))) fs.cpSync(path.join(root, n), path.join(stage, n), { recursive: true, filter: s => !/node_modules|icons\.json/.test(s) });
+['README.md', 'INSTALL-XLAM.md', 'Excel-100x-Pro.xlam', 'START-LOCAL.cmd', 'dist', 'docs', 'src', 'build', 'server', 'xlam'].forEach(n => {
+  if (fs.existsSync(path.join(root, n))) fs.cpSync(path.join(root, n), path.join(stage, n), { recursive: true, filter: s => !/node_modules|icons\.json|[\\/]out[\\/]?$|[\\/]out[\\/]/.test(s) });
 });
 // bsdtar (ships with Windows 10+) writes real zips; GNU tar on PATH would not
 const tar = process.platform === 'win32' ? path.join(process.env.SystemRoot, 'System32', 'tar.exe') : 'zip';

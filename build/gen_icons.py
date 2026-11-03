@@ -4,7 +4,7 @@ from pathlib import Path
 from PIL import Image, ImageDraw, ImageFont
 
 root = Path(__file__).resolve().parent
-out = root.parent / "src" / "assets"
+out = Path(sys.argv[2]) if len(sys.argv) > 2 else root.parent / "src" / "assets"
 out.mkdir(parents=True, exist_ok=True)
 font = ImageFont.truetype("seguiemj.ttf", 109)
 
@@ -40,7 +40,7 @@ def logo(size):
     return g.resize((size, size), Image.LANCZOS)
 
 
-icons = json.loads((root / "icons.json").read_text(encoding="utf-8"))
+icons = json.loads(Path(sys.argv[1] if len(sys.argv) > 1 else root / "icons.json").read_text(encoding="utf-8"))
 for key, ch in icons.items():
     base = emoji(ch)
     for size in (16, 32, 80):

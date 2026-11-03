@@ -1,3 +1,4 @@
 node_modules/
 .stage/
 build/icons.json
+xlam/out/
