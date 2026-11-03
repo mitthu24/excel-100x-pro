@@ -1,5 +1,13 @@
 // Single source for the .xlam ribbon + VBA dispatcher.
 // [group, menu|'', id, label, tip, emoji, vba-call]   (menu '' = plain button)
+const GROUP_ICONS = {
+  'Clean': '🧹', 'Transform': '🔄', 'Text Tools': '🔤', 'Dates & Calc': '📅',
+  'Format': '🎨', 'Formulas': '🧮', 'Sheets': '📑', 'Print & Export': '🖨️',
+  'Highlight': '🖍️', 'Analyze': '📊', 'Charts': '📈', 'Select': '🎯',
+  'Documents': '📄', 'Everyday': '✅', 'Sales & Marketing': '📣', 'HR & Admin': '👥',
+  'Finance': '💰', 'Operations': '🏭', 'Industry': '🏢', 'Productivity': '🚀',
+  'Security': '🔒', 'Help': 'ℹ️',
+};
 const TABS = [
   { id: 'data', label: 'Data Pro', groups: [
     ['Clean', '', 'trim', 'Trim Spaces', 'Remove extra, leading, trailing and non-breaking spaces.', '✂️', 'MapText "trim"'],
@@ -215,4 +223,4 @@ const TABS = [
   ] },
 ];
 const BRAND_URL = 'https://excel-100x-pro.vercel.app/';
-module.exports = { TABS: [{ id: 'pro', label: '100x Pro Tools', groups: TABS.flatMap(x => x.groups) }], BRAND_URL };
+module.exports = { GROUP_ICONS, TABS: [{ id: 'pro', label: '100x Pro Tools', groups: TABS.flatMap(x => x.groups) }], BRAND_URL };

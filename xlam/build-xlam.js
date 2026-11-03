@@ -1,6 +1,6 @@
 // node xlam/build-xlam.js  -> xlam/out/{ribbon.xml, Dispatch.bas, images/*.png}; then make-xlam.ps1 builds the .xlam
 const fs = require('fs'), path = require('path'), cp = require('child_process');
-const { TABS } = require('./xlam-tools.js');
+const { TABS, GROUP_ICONS } = require('./xlam-tools.js');
 
 const out = path.join(__dirname, 'out'), img = path.join(out, 'images');
 fs.rmSync(out, { recursive: true, force: true });
@@ -30,10 +30,12 @@ TABS.forEach((tab, ti) => {
       icons['m_' + safe(t[1]) + '_' + ti + gi] = t[5];
       body += `<menu id="m_${ti}_${gi}_${safe(t[1])}" label="${esc(t[1])}" size="large" image="m_${safe(t[1])}_${ti}${gi}">${items.map(x => btn(x, false)).join('')}</menu>`;
     });
-    groups += `<group id="g_${ti}_${gi}" label="${esc(gname)}">${body}</group>`;
+    const gkey = 'grp_' + safe(gname);
+    icons[gkey] = GROUP_ICONS[gname] || '⚙️';
+    groups += `<group id="g_${ti}_${gi}" label="${esc(gname)}" image="${gkey}">${body}</group>`;
   });
-  const pos = ti === 0 ? 'insertAfterMso="TabHome"' : `insertAfterQ="q:tab_${TABS[ti - 1].id}"`;
-  tabs += `<tab idQ="q:tab_${tab.id}" label="${esc(tab.label)}" ${pos}>${groups}</tab>`;
+  // no insertAfter/insertBefore: Excel appends custom tabs at the end of the ribbon
+  tabs += `<tab id="tab_${tab.id}" label="${esc(tab.label)}">${groups}</tab>`;
 });
 fs.writeFileSync(path.join(out, 'ribbon.xml'),
   `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<customUI xmlns="http://schemas.microsoft.com/office/2009/07/customui" xmlns:q="Pro100x"><ribbon><tabs>${tabs}</tabs></ribbon></customUI>`);
