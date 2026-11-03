@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Licences · Excel 100x Pro</title>
+<style>
+:root{--accent:#4F46E5;--bg:#F5F6FB;--card:#fff;--text:#1F2430;--muted:#6B7280;--line:#E6E8F0;
+      --ok:#059669;--warn:#D97706;--bad:#DC2626;--shadow:0 1px 2px rgba(20,24,60,.06),0 4px 14px rgba(20,24,60,.06)}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#12141C;--card:#1B1E2A;--text:#E8EAF2;--muted:#9AA1B5;--line:#2A2E3E;--shadow:0 1px 2px rgba(0,0,0,.4)}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:14px/1.5 "Segoe UI",system-ui,sans-serif}
+header{background:linear-gradient(135deg,var(--accent),#8B5CF6 60%,#EC4899);color:#fff;padding:22px 20px}
+header h1{margin:0;font-size:20px}header p{margin:3px 0 0;opacity:.85;font-size:13px}
+main{max-width:1100px;margin:0 auto;padding:18px 16px 60px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:16px;box-shadow:var(--shadow)}
+h2{margin:0 0 12px;font-size:15px}
+label{display:block;font-size:12px;color:var(--muted);margin:0 0 3px}
+input,select,textarea{width:100%;padding:9px 11px;border:1.5px solid var(--line);border-radius:10px;background:var(--bg);color:inherit;font:inherit;outline:none}
+input:focus,select:focus{border-color:var(--accent)}
+.row{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;align-items:end}
+button{border:0;border-radius:10px;padding:10px 16px;background:var(--accent);color:#fff;font-weight:600;cursor:pointer;font:inherit}
+button:hover{filter:brightness(1.08)}button.ghost{background:var(--line);color:var(--text)}
+button.sm{padding:5px 10px;font-size:12px;font-weight:500}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.5px;padding:8px 10px;border-bottom:1px solid var(--line)}
+td{padding:9px 10px;border-bottom:1px solid var(--line)}
+tr:hover td{background:color-mix(in srgb,var(--accent) 5%,transparent)}
+code{font:12.5px Consolas,monospace;background:var(--bg);padding:2px 6px;border-radius:6px;cursor:pointer}
+.pill{font-size:11px;padding:2px 9px;border-radius:99px;font-weight:600}
+.pill.ok{background:#D1FAE5;color:#065F46}.pill.warn{background:#FEF3C7;color:#92400E}.pill.bad{background:#FEE2E2;color:#991B1B}
+.msg{padding:10px 13px;border-radius:10px;margin-bottom:12px;display:none;font-weight:500}
+.msg.show{display:block}.msg.ok{background:#D1FAE5;color:#065F46}.msg.bad{background:#FEE2E2;color:#991B1B}
+.gate{max-width:380px;margin:60px auto}
+.newkey{background:#EEF2FF;border:1px dashed var(--accent);border-radius:12px;padding:14px;margin-top:12px;display:none}
+.newkey.show{display:block}.newkey b{font:20px Consolas,monospace;color:var(--accent);letter-spacing:1px}
+.muted{color:var(--muted);font-size:12px}
+@media(max-width:640px){th:nth-child(3),td:nth-child(3),th:nth-child(4),td:nth-child(4){display:none}}
+</style></head><body>
+<header><h1>⚡ Licence Manager</h1><p>Excel 100x Pro</p></header>
+<main>
+  <div id="gate" class="gate card">
+    <h2>Admin sign in</h2>
+    <label for="tok">Admin token</label>
+    <input id="tok" type="password" autocomplete="current-password" placeholder="ADMIN_TOKEN from Vercel">
+    <p class="muted" style="margin:10px 0 12px">Set as the <code>ADMIN_TOKEN</code> environment variable on the Vercel project.</p>
+    <button id="signin">Sign in</button>
+    <div id="gatemsg" class="msg bad" style="margin-top:12px"></div>
+  </div>
+
+  <div id="app" hidden>
+    <div id="msg" class="msg"></div>
+
+    <div class="card">
+      <h2>Issue a new licence</h2>
+      <div class="row">
+        <div><label for="plan">Plan</label><select id="plan"></select></div>
+        <div><label for="cust">Customer</label><input id="cust" placeholder="Acme Traders"></div>
+        <div><label for="mail">Email</label><input id="mail" type="email" placeholder="owner@acme.com"></div>
+        <div><label for="note">Note</label><input id="note" placeholder="paid by UPI"></div>
+        <div><button id="issue">Issue licence</button></div>
+      </div>
+      <div id="newkey" class="newkey">
+        New key for <span id="nkcust"></span>: <b id="nkkey"></b>
+        <button class="sm ghost" id="nkcopy" style="margin-left:8px">Copy</button>
+        <div class="muted" id="nkmeta" style="margin-top:6px"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Licences <button class="sm ghost" id="refresh" style="float:right">Refresh</button></h2>
+      <table><thead><tr>
+        <th>Key</th><th>Customer</th><th>Plan</th><th>Seats</th><th>Expires</th><th>Status</th><th></th>
+      </tr></thead><tbody id="rows"><tr><td colspan="7" class="muted">Loading…</td></tr></tbody></table>
+    </div>
+
+    <div class="card" id="seatcard" hidden>
+      <h2>Computers on <code id="seatkey"></code> <button class="sm ghost" id="closeseats" style="float:right">Close</button></h2>
+      <table><thead><tr><th>Computer</th><th>User</th><th>Activated</th><th>Last seen</th><th></th></tr></thead>
+        <tbody id="seatrows"></tbody></table>
+      <p class="muted" style="margin:10px 0 0">Releasing a seat here frees it immediately. That computer stops working at its next daily check.</p>
+    </div>
+  </div>
+</main>
+<script>
+const $ = s => document.querySelector(s);
+let token = sessionStorage.getItem('exladm') || '';
+
+const api = async body => {
+  const r = await fetch('/api/admin', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json', 'x-admin-token': token },
+    body: JSON.stringify(body),
+  });
+  return r.json();
+};
+const say = (text, ok = true) => {
+  const m = $('#msg');
+  m.textContent = text;
+  m.className = 'msg show ' + (ok ? 'ok' : 'bad');
+  setTimeout(() => (m.className = 'msg'), 5000);
+};
+const esc = t => String(t ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const copy = t => navigator.clipboard?.writeText(t).then(() => say('Copied: ' + t));
+
+async function signIn() {
+  token = $('#tok').value.trim();
+  const r = await api({ action: 'plans' });
+  if (!r.ok) {
+    $('#gatemsg').textContent = r.message || 'Sign in failed.';
+    $('#gatemsg').className = 'msg bad show';
+    return;
+  }
+  sessionStorage.setItem('exladm', token);
+  $('#gate').hidden = true;
+  $('#app').hidden = false;
+  $('#plan').innerHTML = r.rows.map(p =>
+    `<option value="${esc(p.code)}">${esc(p.name)} — ₹${Number(p.price_inr).toLocaleString('en-IN')}</option>`).join('');
+  load();
+}
+
+async function load() {
+  const r = await api({ action: 'list' });
+  if (!r.ok) return say(r.message || 'Could not load licences.', false);
+  $('#rows').innerHTML = r.rows.length ? r.rows.map(x => {
+    const left = x.days_left;
+    const cls = x.status !== 'active' ? 'bad' : left < 0 ? 'bad' : left < 30 ? 'warn' : 'ok';
+    const label = x.status !== 'active' ? x.status : left < 0 ? 'expired' : left + ' days left';
+    return `<tr>
+      <td><code onclick="copy('${esc(x.key)}')">${esc(x.key)}</code></td>
+      <td>${esc(x.customer_name)}<div class="muted">${esc(x.customer_email || '')}</div></td>
+      <td>${esc(x.plan)}</td>
+      <td>${x.seats_used} / ${x.seats}</td>
+      <td>${esc(x.expires)}</td>
+      <td><span class="pill ${cls}">${esc(label)}</span></td>
+      <td style="white-space:nowrap">
+        <button class="sm ghost" onclick="seats('${esc(x.key)}')">Computers</button>
+        <button class="sm ghost" onclick="renew('${esc(x.key)}')">Renew</button>
+        <button class="sm ghost" onclick="setStatus('${esc(x.key)}','${x.status === 'active' ? 'suspended' : 'active'}')">
+          ${x.status === 'active' ? 'Suspend' : 'Reactivate'}</button>
+      </td></tr>`;
+  }).join('') : '<tr><td colspan="7" class="muted">No licences yet. Issue one above.</td></tr>';
+}
+
+async function seats(key) {
+  const r = await api({ action: 'seats', key });
+  if (!r.ok) return say(r.message, false);
+  $('#seatkey').textContent = key;
+  $('#seatcard').hidden = false;
+  $('#seatrows').innerHTML = r.rows.length ? r.rows.map(m => `<tr>
+      <td>${esc(m.machine_name || '(unknown)')}<div class="muted">${esc(m.machine_id)}</div></td>
+      <td>${esc(m.user_name || '')}</td>
+      <td>${esc(String(m.activated_at).slice(0, 10))}</td>
+      <td>${esc(String(m.last_seen_at).slice(0, 10))}</td>
+      <td><button class="sm ghost" onclick="kick('${esc(key)}','${esc(m.machine_id)}')">Release</button></td>
+    </tr>`).join('') : '<tr><td colspan="5" class="muted">No computers activated yet.</td></tr>';
+  $('#seatcard').scrollIntoView({ behavior: 'smooth' });
+}
+
+async function kick(key, machine) {
+  if (!confirm('Release this computer? It will stop working at its next check.')) return;
+  const r = await api({ action: 'kick', key, machine });
+  say(r.message, r.ok);
+  seats(key);
+  load();
+}
+async function renew(key) {
+  const months = prompt('Extend by how many months?', '12');
+  if (!months) return;
+  const r = await api({ action: 'renew', key, months: Number(months) });
+  say(r.ok ? 'Renewed to ' + String(r.licence.expires_at).slice(0, 10) : r.message, r.ok);
+  load();
+}
+async function setStatus(key, status) {
+  const r = await api({ action: 'status', key, status });
+  say(r.message, r.ok);
+  load();
+}
+Object.assign(window, { copy, seats, kick, renew, setStatus });
+
+$('#signin').onclick = signIn;
+$('#tok').onkeydown = e => e.key === 'Enter' && signIn();
+$('#refresh').onclick = load;
+$('#closeseats').onclick = () => ($('#seatcard').hidden = true);
+$('#issue').onclick = async () => {
+  const r = await api({
+    action: 'issue', plan: $('#plan').value, customer: $('#cust').value,
+    email: $('#mail').value, notes: $('#note').value,
+  });
+  if (!r.ok) return say(r.message || 'Could not issue licence.', false);
+  const l = r.licence;
+  $('#nkkey').textContent = l.key;
+  $('#nkcust').textContent = l.customer_name;
+  $('#nkmeta').textContent = `${l.seats} computers · expires ${String(l.expires_at).slice(0, 10)}`;
+  $('#nkcopy').onclick = () => copy(l.key);
+  $('#newkey').className = 'newkey show';
+  $('#cust').value = $('#mail').value = $('#note').value = '';
+  load();
+};
+
+if (token) signIn(); else $('#tok').focus();
+</script></body></html>

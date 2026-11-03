@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Pricing · Excel 100x Pro</title>
+<style>
+:root{--accent:#4F46E5;--bg:#F5F6FB;--card:#fff;--text:#1F2430;--muted:#6B7280;--line:#E6E8F0;
+      --shadow:0 1px 2px rgba(20,24,60,.06),0 8px 24px rgba(20,24,60,.08)}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#12141C;--card:#1B1E2A;--text:#E8EAF2;--muted:#9AA1B5;--line:#2A2E3E;--shadow:0 1px 2px rgba(0,0,0,.4)}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:15px/1.6 "Segoe UI",system-ui,sans-serif}
+header{background:linear-gradient(135deg,var(--accent),#8B5CF6 60%,#EC4899);color:#fff;padding:44px 20px;text-align:center}
+header h1{margin:0;font-size:30px;letter-spacing:-.4px}
+header p{margin:8px 0 0;opacity:.9}
+main{max-width:900px;margin:0 auto;padding:28px 16px 70px}
+.plans{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px;margin-bottom:28px}
+.plan{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:24px;box-shadow:var(--shadow);position:relative}
+.plan.best{border:2px solid var(--accent)}
+.tag{position:absolute;top:-11px;left:24px;background:var(--accent);color:#fff;font-size:11px;font-weight:700;
+     padding:3px 11px;border-radius:99px;letter-spacing:.4px}
+.plan h2{margin:0 0 2px;font-size:17px}
+.seats{color:var(--muted);font-size:13px}
+.price{font-size:38px;font-weight:800;letter-spacing:-1px;margin:14px 0 2px}
+.price small{font-size:14px;font-weight:500;color:var(--muted)}
+ul{list-style:none;padding:0;margin:16px 0 20px}
+li{padding:5px 0 5px 25px;position:relative;font-size:14px}
+li::before{content:"✓";position:absolute;left:0;color:var(--accent);font-weight:700}
+.btn{display:block;text-align:center;text-decoration:none;background:var(--accent);color:#fff;font-weight:600;
+     padding:11px;border-radius:11px}
+.btn:hover{filter:brightness(1.08)}
+.btn.ghost{background:var(--line);color:var(--text)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:22px;box-shadow:var(--shadow)}
+h3{margin:0 0 10px;font-size:16px}
+dt{font-weight:600;margin-top:14px}
+dd{margin:3px 0 0;color:var(--muted);font-size:14px}
+footer{text-align:center;color:var(--muted);font-size:13px;padding:0 16px 40px}
+</style></head><body>
+<header>
+  <h1>⚡ Excel 100x Pro</h1>
+  <p>202 tools in one ribbon tab. One subscription covers your whole team.</p>
+</header>
+<main>
+  <div class="plans">
+    <div class="plan">
+      <h2>Small</h2><div class="seats">Up to 5 computers</div>
+      <div class="price">₹999<small> / year</small></div>
+      <ul><li>All 202 tools</li><li>5 computers</li><li>Move a seat to a new PC</li><li>Email support</li></ul>
+      <a class="btn ghost" href="mailto:YOUR-EMAIL?subject=Excel%20100x%20Pro%20-%20Small%20plan">Buy Small</a>
+    </div>
+    <div class="plan best">
+      <span class="tag">BEST VALUE</span>
+      <h2>Team</h2><div class="seats">Up to 10 computers</div>
+      <div class="price">₹999<small> / year</small></div>
+      <ul><li>All 202 tools</li><li>10 computers</li><li>Move a seat to a new PC</li><li>Priority support</li></ul>
+      <a class="btn" href="mailto:YOUR-EMAIL?subject=Excel%20100x%20Pro%20-%20Team%20plan">Buy Team</a>
+    </div>
+    <div class="plan">
+      <h2>Trial</h2><div class="seats">1 computer, 14 days</div>
+      <div class="price">Free</div>
+      <ul><li>All 202 tools</li><li>No payment details</li><li>Upgrade any time</li><li>Ask for a key</li></ul>
+      <a class="btn ghost" href="mailto:YOUR-EMAIL?subject=Excel%20100x%20Pro%20-%20free%20trial">Request a trial</a>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Common questions</h3>
+    <dl>
+      <dt>What counts as a computer?</dt>
+      <dd>Each PC where the add-in is activated uses one seat. The same person on two PCs uses two seats.</dd>
+      <dt>A computer died or was replaced. Do I lose a seat?</dt>
+      <dd>No. On the new PC, open <b>100x Pro Tools → Licence</b>, enter your key, and pick the old computer
+          from the list to free its seat. The old PC stops working; the new one starts. Up to three moves per month.</dd>
+      <dt>Does it need the internet?</dt>
+      <dd>Only to activate and for a quick check once a day. It keeps working offline for up to 14 days.</dd>
+      <dt>What happens when the subscription ends?</dt>
+      <dd>The tools stop, but every sheet, template and document you created stays in your files and keeps working.</dd>
+      <dt>Mac or Excel on the web?</dt>
+      <dd>The .xlam is Windows only. The free web edition works everywhere.</dd>
+    </dl>
+  </div>
+</main>
+<footer>Questions? Write to <b>YOUR-EMAIL</b></footer>
+</body></html>

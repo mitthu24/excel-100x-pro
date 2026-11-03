@@ -218,9 +218,12 @@ const TABS = [
     ['Security', 'Workbook', 'breaklinks', 'Break External Links', 'Convert external links to values.', '⛓️', 'BreakLinks'],
     ['Security', 'Workbook', 'allvalues', 'All Formulas to Values', 'Whole workbook, all sheets.', '🧱', 'BookToValues'],
     ['Security', 'Workbook', 'delempty', 'Delete Empty Sheets', 'Remove sheets that have no data.', '🗑️', 'DeleteEmptySheets'],
+    ['Help', '', 'licence', 'Licence', 'Activate this computer, check your licence, or move it to another computer.', '🔑', 'LicManage'],
+    ['Help', '', 'buy', 'Buy or Renew', 'Open the pricing page to buy or renew a subscription.', '🛒', 'LicBuy'],
     ['Help', '', 'web', 'Web Add-in Edition', 'Open the online version (works in Excel on the web / Mac).', '🌐', 'OpenWeb'],
-    ['Help', '', 'about', 'About', 'About Excel 100x Pro.', 'ℹ️', 'AboutPro'],
+    ['Help', '', 'about', 'About', 'Version and licence details.', 'ℹ️', 'LicAbout'],
   ] },
 ];
 const BRAND_URL = 'https://excel-100x-pro.vercel.app/';
-module.exports = { GROUP_ICONS, TABS: [{ id: 'pro', label: '100x Pro Tools', groups: TABS.flatMap(x => x.groups) }], BRAND_URL };
+const FREE_TOOLS = ['licence', 'buy', 'web', 'about'];  // usable without a licence
+module.exports = { FREE_TOOLS, GROUP_ICONS, TABS: [{ id: 'pro', label: '100x Pro Tools', groups: TABS.flatMap(x => x.groups) }], BRAND_URL };

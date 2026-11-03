@@ -1,0 +1,8 @@
+{
+  "name": "excel-100x-pro-licence",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@neondatabase/serverless": "0.10.4"
+  }
+}
