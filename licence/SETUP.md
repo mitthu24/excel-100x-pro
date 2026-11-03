@@ -67,18 +67,23 @@ Email the key to the customer. They open Excel → **100x Pro Tools → Licence*
 
 ## Changing prices or plans
 
-Prices live in the `plans` table and in `licence/buy.html`. To change one:
+You sell one paid plan: **₹999 a year for 5 computers**, plus a free 14-day single-PC trial.
+
+Prices live in the `plans` table and on the pricing page `licence/buy.html`. To change the price:
 
 ```sql
-update plans set price_inr = 1999 where code = 'Y10';
+update plans set price_inr = 1299 where code = 'Y5';
 ```
 
-To add a plan:
+To add a bigger tier (it appears in the admin drop-down straight away):
 
 ```sql
 insert into plans (code, name, seats, price_inr, days)
-values ('Y25', 'Yearly - 25 computers', 25, 4999, 365);
+values ('Y10', 'Yearly - 10 computers', 10, 1799, 365);
 ```
+
+Changing a plan never affects licences already issued; each licence keeps the seat count and
+expiry date it was given. Remember to add the tier to `buy.html` as well.
 
 ## What this protects against, and what it does not
 

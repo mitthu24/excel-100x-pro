@@ -41,10 +41,12 @@ create unique index if not exists activations_one_active_per_machine
   on activations (licence_key, machine_id) where status = 'active';
 create index if not exists activations_by_key on activations (licence_key);
 
+-- Add more tiers whenever you like, for example:
+--   insert into plans (code, name, seats, price_inr, days)
+--   values ('Y10', 'Yearly - 10 computers', 10, 1799, 365);
 insert into plans (code, name, seats, price_inr, days) values
-  ('Y5',   'Yearly - 5 computers',   5, 999, 365),
-  ('Y10',  'Yearly - 10 computers', 10, 999, 365),
-  ('TRIAL','14-day trial',           1,   0,  14)
+  ('Y5',   'Yearly - 5 computers', 5, 999, 365),
+  ('TRIAL','14-day trial',         1,   0,  14)
 on conflict (code) do nothing;
 
 -- how many seats one licence may free in a rolling 30 days (dead-PC transfers)
@@ -188,7 +190,7 @@ end $$;
 
 -- ---------------------------------------------------------------- admin
 
--- select * from issue_licence('Y10', 'Acme Traders', 'acme@example.com');
+-- select * from issue_licence('Y5', 'Acme Traders', 'acme@example.com');
 create or replace function issue_licence(
   p_plan text, p_customer text, p_email text default null, p_notes text default null)
 returns licences language plpgsql as $$
