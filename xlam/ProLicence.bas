@@ -13,6 +13,7 @@ Private Const PRODUCT   As String = "Excel 100x Pro"
 
 Private mChecked As Boolean      ' re-checked at most once per Excel session
 Private mValid   As Boolean
+Private mSilent  As Boolean      ' suppress prompts in unattended Excel
 
 ' ---------------------------------------------------------------- stored state
 Private Function Cfg(ByVal k As String) As String
@@ -225,8 +226,15 @@ Private Sub WarnIfEnding()
     End If
 End Sub
 
+' Set by LicSilent for unattended Excel (a scheduled job, or our own test harness),
+' where a MsgBox has nobody to answer it and would hang the process.
+Public Sub LicSilent(ByVal on_ As Boolean)
+    mSilent = on_
+End Sub
+
 Private Sub NotLicensed(ByVal why As String)
     mValid = False
+    If mSilent Then Exit Sub
     If MsgBox(why & vbCrLf & vbCrLf & "Enter a licence key now?", vbYesNo + vbExclamation, PRODUCT & " - licence needed") = vbYes Then
         LicManage
     End If
