@@ -5,6 +5,18 @@ $ids = (node -e "const {TABS}=require('$($PSScriptRoot -replace '\\','/')/xlam-t
 $poll = Join-Path $env:TEMP 'pro100x-poll.ps1'; $log = Join-Path $env:TEMP 'pro100x-dialogs.txt'; Remove-Item $log -ErrorAction SilentlyContinue
 @'
 Add-Type -AssemblyName UIAutomationClient
+Add-Type -Name Cur -Namespace U -MemberDefinition @"
+[DllImport("user32.dll")] public static extern bool SetCursorPos(int x, int y);
+[DllImport("user32.dll")] public static extern void mouse_event(uint f, uint x, uint y, uint d, int e);
+"@
+# A MsgBox button is a Pane with no InvokePattern, so fall back to a real click on it.
+function Hit($e) {
+  try { $e.GetCurrentPattern([Windows.Automation.InvokePattern]::Pattern).Invoke(); return } catch {}
+  $r = $e.Current.BoundingRectangle
+  if ($r.Width -le 0) { return }
+  [void][U.Cur]::SetCursorPos([int]($r.X + $r.Width / 2), [int]($r.Y + $r.Height / 2))
+  [U.Cur]::mouse_event(2, 0, 0, 0, 0); [U.Cur]::mouse_event(4, 0, 0, 0, 0)
+}
 $root = [Windows.Automation.AutomationElement]::RootElement
 while ($true) {
   $w = $null
@@ -13,10 +25,16 @@ while ($true) {
     $w = $root.FindFirst([Windows.Automation.TreeScope]::Children, $c); if ($w) { break }
   }
   if ($w) {
-    $t = $w.FindAll([Windows.Automation.TreeScope]::Descendants, (New-Object Windows.Automation.PropertyCondition([Windows.Automation.AutomationElement]::ControlTypeProperty, [Windows.Automation.ControlType]::Text))) | % { $_.Current.Name }
-    ($t -join ' ') | Out-File -Append $args[0]
-    $b = $w.FindFirst([Windows.Automation.TreeScope]::Descendants, (New-Object Windows.Automation.PropertyCondition([Windows.Automation.AutomationElement]::ControlTypeProperty, [Windows.Automation.ControlType]::Button)))
-    if ($b) { try { $b.GetCurrentPattern([Windows.Automation.InvokePattern]::Pattern).Invoke() } catch {} }
+    # A VBA MsgBox exposes both its text and its buttons as Panes, not Text and Button,
+    # so match on the name and let the button names tell the two apart.
+    $all = $w.FindAll([Windows.Automation.TreeScope]::Descendants, (New-Object Windows.Automation.PropertyCondition([Windows.Automation.AutomationElement]::IsControlElementProperty, $true)))
+    (($all | % { $_.Current.Name } | ? { $_ -and $_ -notmatch '^(OK|Yes|No|Cancel|End|Debug|Help|Continue)$' }) -join ' ') | Out-File -Append $args[0]
+    foreach ($b in $all) {
+      if ($b.Current.Name -match '^(OK|No|Cancel|End)$') {
+        Hit $b
+        break
+      }
+    }
     Start-Sleep -Milliseconds 400
   }
   Start-Sleep -Milliseconds 200
