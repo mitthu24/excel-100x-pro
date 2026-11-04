@@ -56,20 +56,46 @@ Public Function MachineId() As String
     MachineId = cached
 End Function
 
-' FNV-1a 64-bit, done in two 32-bit halves because VBA has no unsigned 64-bit maths.
+' FNV-1a style hash in two 32-bit halves. Doubles hold the values because VBA has no
+' unsigned 32-bit type, and Hex8 formats them because Hex$ overflows above 2^31.
 Private Function Fnv(ByVal s As String) As String
     Dim h1 As Double, h2 As Double, i As Long, c As Long
     h1 = 2166136261#: h2 = 16777619#
     For i = 1 To Len(s)
         c = AscW(Mid$(s, i, 1)) And &HFFFF&
-        h1 = ModPow(h1 Xor (c And &HFF&), 16777619#)
-        h2 = ModPow(h2 + c * (i + 7), 16777619#)
+        h1 = Mul32(XorLow(h1, c And &HFF&), 16777619#)
+        h2 = Mul32(h2 + c * (i + 7), 16777619#)
     Next
-    Fnv = Right$("00000000" & Hex$(CDec(h1)), 8) & Right$("00000000" & Hex$(CDec(h2)), 8)
+    Fnv = Hex8(h1) & Hex8(h2)
 End Function
 
-Private Function ModPow(ByVal v As Double, ByVal m As Double) As Double
-    ModPow = v * m - Int(v * m / 4294967296#) * 4294967296#
+' v Xor b for a byte b. Only the low byte changes, so the Xor runs on two small Longs:
+' VBA coerces Xor operands to Long and v goes above 2^31, which would overflow.
+Private Function XorLow(ByVal v As Double, ByVal b As Long) As Double
+    Dim low As Double
+    low = v - Int(v / 256#) * 256#
+    XorLow = v - low + (CLng(low) Xor b)
+End Function
+
+' (v * m) mod 2^32, keeping everything inside the exact range of a Double
+Private Function Mul32(ByVal v As Double, ByVal m As Double) As Double
+    Dim lo As Double, hi As Double
+    v = v - Int(v / 4294967296#) * 4294967296#
+    hi = Int(v / 65536#)
+    lo = v - hi * 65536#
+    Mul32 = (lo * m + (hi * m - Int(hi * m / 65536#) * 65536#) * 65536#)
+    Mul32 = Mul32 - Int(Mul32 / 4294967296#) * 4294967296#
+End Function
+
+Private Function Hex8(ByVal v As Double) As String
+    Dim s As String, d As Long, i As Long
+    v = Int(Abs(v))
+    For i = 1 To 8
+        d = CLng(v - Int(v / 16#) * 16#)
+        s = Mid$("0123456789ABCDEF", d + 1, 1) & s
+        v = Int(v / 16#)
+    Next
+    Hex8 = s
 End Function
 
 ' ---------------------------------------------------------------- tiny JSON reader
@@ -237,38 +263,63 @@ Public Sub LicManage()
     key = UCase$(Trim$(InputBox("Enter your " & PRODUCT & " licence key:" & vbCrLf & vbCrLf & _
                                 "It looks like  EXL-XXXX-XXXX-XXXX", PRODUCT & " - activate", key)))
     If key = "" Then Exit Sub
+    MsgBox LicActivateKey(key), vbInformation, PRODUCT
+End Sub
 
+' Activates this computer on the given key. Returns a message to show the user.
+' Offers the transfer list when every seat is taken.
+Public Function LicActivateKey(ByVal key As String, Optional ByVal silent As Boolean = False) As String
+    Dim r As String
+    key = UCase$(Trim$(key))
     r = Api("activate", key)
     If r = "" Then
-        MsgBox "Could not reach the licence server." & vbCrLf & vbCrLf & _
-               "Check the internet connection and try again.", vbExclamation, PRODUCT
-        Exit Sub
+        LicActivateKey = "Could not reach the licence server. Check the internet connection and try again."
+        Exit Function
     End If
 
     If JOk(r) Then
-        StoreAndGreet key, r
-    ElseIf JVal(r, "error") = "seat_limit" Then
+        LicActivateKey = Stored(key, r)
+        Exit Function
+    End If
+
+    If JVal(r, "error") = "seat_limit" And Not silent Then
         If OfferTransfer(key, JVal(r, "message")) Then
             r = Api("activate", key)
-            If JOk(r) Then StoreAndGreet key, r Else MsgBox JVal(r, "message"), vbExclamation, PRODUCT
+            If JOk(r) Then LicActivateKey = Stored(key, r) Else LicActivateKey = JVal(r, "message")
+            Exit Function
         End If
-    Else
-        MsgBox JVal(r, "message"), vbExclamation, PRODUCT
     End If
-End Sub
+    LicActivateKey = JVal(r, "message")
+End Function
 
-Private Sub StoreAndGreet(ByVal key As String, ByVal r As String)
+Private Function Stored(ByVal key As String, ByVal r As String) As String
     SetCfg "Key", key
     SetCfg "Expires", JVal(r, "expires")
     SetCfg "LastCheck", Format(Date, "yyyy-mm-dd")
     mChecked = True
     mValid = True
-    MsgBox "Activated." & vbCrLf & vbCrLf & _
-           "Plan:      " & JVal(r, "plan") & vbCrLf & _
-           "Computers: " & JVal(r, "seats_used") & " of " & JVal(r, "seats_total") & vbCrLf & _
-           "Valid to:  " & JVal(r, "expires") & vbCrLf & vbCrLf & _
-           "The 100x Pro Tools tab is ready to use.", vbInformation, PRODUCT
-End Sub
+    Stored = "Activated." & vbCrLf & vbCrLf & _
+             "Plan:      " & JVal(r, "plan") & vbCrLf & _
+             "Computers: " & JVal(r, "seats_used") & " of " & JVal(r, "seats_total") & vbCrLf & _
+             "Valid to:  " & JVal(r, "expires") & vbCrLf & vbCrLf & _
+             "The 100x Pro Tools tab is ready to use."
+End Function
+
+' Support / diagnostics: frees this computer and forgets the key.
+Public Function LicReleaseThis() As String
+    Dim r As String, key As String
+    key = Cfg("Key")
+    If key = "" Then LicReleaseThis = "No licence on this computer.": Exit Function
+    r = Api("release", key)
+    If r = "" Then LicReleaseThis = "Could not reach the licence server.": Exit Function
+    ForgetLicence
+    LicReleaseThis = JVal(r, "message")
+End Function
+
+Public Function LicStatus() As String
+    LicStatus = "key=" & Cfg("Key") & "; expires=" & Cfg("Expires") & _
+                "; lastcheck=" & Cfg("LastCheck") & "; machine=" & MachineId()
+End Function
 
 ' Lists the computers holding a seat and lets the user free one (the old PC need not be alive).
 Private Function OfferTransfer(ByVal key As String, ByVal why As String) As Boolean

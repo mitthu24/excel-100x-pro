@@ -1,6 +1,15 @@
-# Licence system — setup (about 10 minutes, one time)
+# Licence system
 
-Everything is built and deployed. It needs a database and two settings before it will run.
+**Status: live and working.** The database, API and admin page are set up and tested.
+Nothing below needs doing again — it is here so you know how it fits together and how to
+rebuild it if you ever move hosts.
+
+| What | Where |
+|---|---|
+| Admin page | <https://excel-100x-pro.vercel.app/admin.html> |
+| Pricing page | <https://excel-100x-pro.vercel.app/buy.html> |
+| Database | Neon `excel-100xpro`, linked to the Vercel project |
+| Plans | ₹999 / year for 5 computers · free 14-day trial (1 computer) |
 
 ## How it works
 
@@ -18,31 +27,23 @@ You            ──────>  excel-100x-pro.vercel.app/admin.html   ─�
   freed. The old PC stops at its next daily check. Limited to 3 moves per 30 days.
 - The add-in checks in **once a day** and keeps working **offline for up to 14 days**.
 
-## Step 1 — create the database
+## How it was set up (for reference, or to rebuild elsewhere)
 
-1. In Vercel, open the **excel-100x-pro** project → **Storage** → **Create Database** → **Neon**.
-   (Your Neon org is already linked to Vercel, so this just adds a database.)
-2. Vercel sets `DATABASE_URL` on the project automatically. Nothing to copy.
+1. **Database** — Vercel project → Storage → Create Database → Neon. Vercel then sets
+   `DATABASE_URL` and the other Postgres variables on the project by itself.
+2. **Tables** — [`schema.sql`](schema.sql) applied to that database. Vercel masks the Neon
+   password, so it was applied by deploying a one-off endpoint that runs server-side:
+   ```bash
+   node build/deploy-web.js --with-setup
+   cd .deploy && vercel deploy --prod --yes --scope smart-bi-studio --name excel-100x-pro
+   curl -s -X POST https://excel-100x-pro.vercel.app/api/setup -H "x-admin-token: YOUR-TOKEN" -d '{}'
+   node build/deploy-web.js        # plain build drops /api/setup again
+   ```
+   The endpoint is **not** deployed normally. The SQL is idempotent, so re-running is safe.
+   You can also just paste `schema.sql` into the Neon SQL editor.
+3. **Admin password** — `ADMIN_TOKEN` set on the Vercel project for all three environments.
 
-If you prefer the Neon console, create a database there and add its pooled connection string to
-Vercel as `DATABASE_URL` (Settings → Environment Variables → Production).
-
-## Step 2 — create the tables
-
-Open the Neon console → your database → **SQL Editor** → paste the whole of
-[`schema.sql`](schema.sql) → **Run**. It creates the tables, the plans and the functions.
-
-## Step 3 — set your admin password
-
-Vercel → project → **Settings → Environment Variables** → add:
-
-| Name | Value |
-|---|---|
-| `ADMIN_TOKEN` | a long random password you invent |
-
-Then **Deployments → ⋯ → Redeploy** so both variables take effect.
-
-## Step 4 — check it
+### Health check
 
 ```bash
 curl -s -X POST https://excel-100x-pro.vercel.app/api/licence \
@@ -51,7 +52,7 @@ curl -s -X POST https://excel-100x-pro.vercel.app/api/licence \
 ```
 
 Expected: `{"ok":false,"error":"not_found","message":"Licence key not recognised."}`
-If it says *not set up yet*, `DATABASE_URL` is missing or the redeploy has not finished.
+If it says *not set up yet*, `DATABASE_URL` is missing or a redeploy has not finished.
 
 ## Day-to-day: issuing keys
 
@@ -105,6 +106,22 @@ to patch), or move the valuable work server-side so the add-in is only a front e
 | `schema.sql` | Database tables, seat logic, admin functions |
 | `api/licence.js` | Public endpoint the add-in calls |
 | `api/admin.js` | Private endpoint, guarded by `ADMIN_TOKEN` |
+| `api/setup.js` | One-off migration runner, deployed only with `--with-setup` |
 | `admin.html` | Your licence manager |
 | `buy.html` | Public pricing page |
 | `../xlam/ProLicence.bas` | Add-in side: machine id, activation, daily check, transfer |
+
+## Tests
+
+```bash
+ADMIN_TOKEN=your-token node licence/test.mjs
+```
+
+[`test.mjs`](test.mjs) was run against the live API. It covers: five seats
+activating, the sixth being refused, re-activation not consuming a seat, the daily check,
+the machine list, releasing a seat and reusing it, a released PC being locked out, the
+three-transfers-per-month cap, suspend and reactivate, unknown and empty keys, lowercase keys,
+admin needing a token, renewal, and the seat count in the overview. All passed.
+
+If you change `schema.sql` or the API, re-run those checks before deploying. They create a
+licence named **TEST - automated** and delete it at the end.

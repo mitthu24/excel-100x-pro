@@ -35,13 +35,13 @@ export default async function handler(req, res) {
 
       case 'issue': {
         if (!s(b.customer, 120)) return res.json({ ok: false, message: 'Customer name is required.' });
-        const r = await db()`select issue_licence(${s(b.plan, 16)}, ${s(b.customer, 120)},
-                                                 ${s(b.email, 160)}, ${s(b.notes, 400)}) as l`;
+        const r = await db()`select to_jsonb(issue_licence(${s(b.plan, 16)}, ${s(b.customer, 120)},
+                                                           ${s(b.email, 160)}, ${s(b.notes, 400)})) as l`;
         return res.json({ ok: true, licence: r[0].l });
       }
 
       case 'renew': {
-        const r = await db()`select renew_licence(${key}, ${Number(b.months) || 12}) as l`;
+        const r = await db()`select to_jsonb(renew_licence(${key}, ${Number(b.months) || 12})) as l`;
         return res.json({ ok: true, licence: r[0].l });
       }
 
@@ -59,6 +59,10 @@ export default async function handler(req, res) {
                             from activations where licence_key = ${key} and status = 'active'
                            order by last_seen_at desc`,
         });
+
+      case 'delete':   // for a key issued by mistake; activations go with it
+        await db()`delete from licences where key = ${key}`;
+        return res.json({ ok: true, message: 'Licence deleted.' });
 
       case 'kick':
         await db()`update activations set status = 'released', released_at = now()
